@@ -62,6 +62,6 @@ elif args.subtract:
 else:
 	if os.path.isfile('pointstracker'):
 		with open('pointstracker', 'r') as f:
-			print 'Curent House Points Total: ', f.readline()
+			print current_total_str, f.readline()
 	else:
-		print 'Current House Points Total: 0'			
+		print current_total_str, '0'			
