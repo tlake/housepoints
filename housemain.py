@@ -1,9 +1,9 @@
 import argparse
 import shutil
-import os.path
+import os
 import sys
 
-# version check, newline character def
+# python version check, newline character def
 if sys.version_info.major == 3:
 	newline = '/n'
 else:
@@ -12,6 +12,34 @@ else:
 # some defs
 new_total_str = 'New House Points Total: '
 current_total_str = 'Current House Points Total: '
+homedir = os.path.expanduser('~')
+points_dir = homedir + '/local/share/'
+points_file = 'pointstracker'
+points_path = points_dir + points_file
+
+def file_checker(dirname, filename):
+	if not os.path.isdir(dirname):
+		print  'Directory not found; creating ' + points_path
+		os.makedirs(dirname)
+		with open(dirname + filename, 'w') as newfile:
+			newfile.write('0')
+		return
+	elif not os.path.isfile(dirname + filename):
+		print 'File \'pointstracker\' not found; creating ' + points_path
+		with open(dirname + filename, 'w') as newfile:
+			newfile.write('0')
+		return
+	return
+
+def file_reader(path_to_file):
+	with open(path_to_file, 'r') as oldfile:
+		return oldfile.readline()
+
+def file_updater(path_to_file, string_to_add):
+	with open('temp', 'w') as tempfile:
+		with open(path_to_file, 'r') as oldfile:
+			tempfile.write(string_to_add + newline + oldfile.read())
+	shutil.move('temp', path_to_file)
 
 # parser setup
 parser = argparse.ArgumentParser(description='display current house points')
@@ -21,47 +49,23 @@ group.add_argument('-s', '--subtract', action='store', type=int)
 
 args = parser.parse_args()
 
+
 # if block: how to handle arguments
 ## adding points
 if args.add:
-	if os.path.isfile('pointstracker'):
-		with open('pointstracker', 'r') as oldfile:
-			line = oldfile.readline()
-			points = int(line)
-			points += args.add
-			print new_total_str, points
-			oldfile.seek(0)
-			with open('temp', 'w') as tempfile:
-				tempstring = str(points) + newline + oldfile.read()
-				tempfile.write(tempstring)
-		shutil.move('temp', 'pointstracker')				
-	else:
-		print new_total_str, args.add
-		with open('pointstracker', 'w') as newfile:
-			newfile.write(str(args.add))
+	file_checker(points_dir, points_file)
+	points = str(int(file_reader(points_path)) + args.add)
+	print new_total_str + points
+	file_updater(points_path, points)
 
 ## subtracting points
 elif args.subtract:
-	if os.path.isfile('pointstracker'):
-		with open('pointstracker','r') as oldfile:
-			line = oldfile.readline()
-			points = int(line)
-			points -= args.subtract
-			print new_total_str, points
-			oldfile.seek(0)
-			with open('temp', 'w') as tempfile:
-				tempstring = str(points) + newline + oldfile.read()
-				tempfile.write(tempstring)
-		shutil.move('temp', 'pointstracker')
-	else:
-		print new_total_str, 0 - args.subtract
-		with open('pointstracker', 'w') as newfile:
-			newfile.write(str(0 - args.subtract))
+	file_checker(points_dir, points_file)
+	points = str(int(file_reader(points_path)) - args.subtract)
+	print new_total_str + points
+	file_updater(points_path, points)
 
 ## displaying current points (default behavior)
 else:
-	if os.path.isfile('pointstracker'):
-		with open('pointstracker', 'r') as f:
-			print current_total_str, f.readline()
-	else:
-		print current_total_str, '0'			
+	file_checker(points_dir, points_file)
+	print current_total_str + file_reader(points_path)
